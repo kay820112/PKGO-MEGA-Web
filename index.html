@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
   <title>Pokemon GO 超級進化查詢</title>
 
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2563eb">
+
   <!-- 分享卡片 -->
   <meta property="og:title" content="Pokemon GO 超級進化查詢">
   <meta property="og:description" content="快速查詢所有超進化/原始回歸的屬性與所需能量！">
@@ -69,5 +73,13 @@
 
   <!-- 外部腳本 -->
   <script src="main.js"></script>
+  <script>
+    // 註冊 Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(console.error);
+      });
+    }
+  </script>
 </body>
 </html>
