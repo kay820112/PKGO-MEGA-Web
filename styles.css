@@ -69,9 +69,9 @@ input,select{font-size:16px;} /* 防 iOS 自動放大輸入框 */
 
 /* 讓兩種卡片都能放絕對定位的 X，並統一段落間距 */
 #detailCard, #floatingCard { position: relative; }
-#detailCard h2, #floatingCard h2 { margin:0 0 12px 0; font-size:20px; font-weight:700; }
+#detailCard h2, #floatingCard h2 { margin:0 0 12px 0; font-size:26px; font-weight:800; }
 #detailCard .detail-types, #floatingCard .detail-types { margin:0 0 8px 0; }
-#detailCard p, #floatingCard p { margin:0 0 8px 0; font-size:14px; color:#111; }
+#detailCard p, #floatingCard p { margin:0 0 8px 0; font-size:16px; color:#111; }
 
 /* 浮動鏡像卡片（由 JS 同步尺寸與位置；用 border-box 對齊） */
 #floatingCard{

@@ -1,10 +1,10 @@
 // === Google Sheet 兩個工作表 ===
 const SHEET_BASE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSrBQ6lQHjl-iuSWbQJjlgJXovQRFHqQ0ML4L4VoPVjIQYXygc3VxlINrGs8nY3NqDh_z-bE38M4I-Z/pub";
-const urlTypes  = `${SHEET_BASE}?gid=0&single=true&output=csv`;           // 超級淨化（名稱+屬性✔）
+const urlTypes  = `${SHEET_BASE}?gid=0&single=true&output=csv`;           // 超級淨化（名稱+屬性✔ + 優先度）
 const urlEnergy = `${SHEET_BASE}?gid=557191716&single=true&output=csv`;   // 所需能量表（開圖、總量）
 
 // === 狀態 ===
-let data = [];           // [{ name, types:[…], open, total }]
+let data = [];           // [{ name, types:[…], open, total, priority }]
 let energyMap = {};      // { normalizedName: { open, total, rawName } }
 let selectedType = "", selectedPokemon = "", searchTerm = "";
 
@@ -77,17 +77,19 @@ async function loadTypesAndMerge(){
   const res = await fetch(urlTypes);
   const rows = parseCSV(await res.text());
 
-  // 只取 B~S 欄的屬性（避免把「開放日期」抓進來）
-  const headers = rows[0].slice(1, 20);
+  // 只取 B~T 欄作為屬性；V 欄是優先度
+  const headers = rows[0].slice(1, 20);              // B..T
+  const PRIORITY_COL_INDEX = 21;                      // 欄 V：優先度
 
   const byName = new Set();
   data = rows.slice(1).map(r => {
     const rawName = (r[0] || "").trim();
     const name = normalizeName(rawName);
     const types = headers.filter((_, i) => r[i+1] && r[i+1].trim() === "✔");
+    const priority = (r[PRIORITY_COL_INDEX] || "").trim();
     const e = energyMap[name] || { open:"", total:"" };
     byName.add(name);
-    return { name: rawName || name, types, open: e.open, total: e.total };
+    return { name: rawName || name, types, open: e.open, total: e.total, priority };
   });
 
   // 下拉選單
@@ -105,14 +107,14 @@ async function loadTypesAndMerge(){
     if (!byName.has(norm)){
       const e = energyMap[norm];
       const displayName = e.rawName || norm;
-      data.push({ name: displayName, types: [], open: e.open, total: e.total });
+      data.push({ name: displayName, types: [], open: e.open, total: e.total, priority: "" });
       const opt = document.createElement("option");
       opt.value = displayName; opt.textContent = displayName; pokemonSelect.appendChild(opt);
     }
   });
 }
 
-// ——— 卡片 HTML（抽掉 inline style，靠 CSS 控制間距） ———
+// ——— 卡片 HTML（上方名稱放大、下方敘述加大，新增推薦程度） ———
 function detailHTML(p){
   return `
     <button class="close-x" aria-label="關閉詳細卡片" title="關閉" type="button">×</button>
@@ -122,6 +124,7 @@ function detailHTML(p){
     </div>
     <p>開圖能量：${p.open !== "" ? p.open : "－"}</p>
     <p>練滿能量：${p.total !== "" ? p.total : "－"}</p>
+    <p>推薦程度：${p.priority && p.priority !== "" ? p.priority : "－"}</p>
   `;
 }
 
@@ -284,14 +287,16 @@ window.addEventListener("resize", () => {
 
 // 初始化（雙保險關閉 Loading；支援快取離線）
 (async function init(){
+  const show = () => { if (loadingOverlay) loadingOverlay.style.display = "flex"; };
   const hide = () => { if (loadingOverlay) loadingOverlay.style.display = "none"; };
-  const forceTimer = setTimeout(hide, 1200); // 保底 1.2s 關
+  const showTimer = setTimeout(show, 200); // 超過 200ms 才顯示 Loading
 
   // 1) 有快取先畫，讓行動裝置立即可互動
   const cache = loadCache();
   if (cache?.data?.length){
     data = cache.data;
     renderList();
+    if (selectedPokemon){ renderDetail(); }
   }
 
   try {
@@ -299,16 +304,16 @@ window.addEventListener("resize", () => {
     await loadEnergy();
     await loadTypesAndMerge();
     renderList();
+    if (selectedPokemon){ renderDetail(); }
     // 3) 存快取
     saveCache(data);
-    // 4) 若 URL 指定了 name，補繪詳細
-    if (selectedPokemon){ renderDetail(); }
   } catch (err) {
     console.error("[init] 資料讀取失敗：", err);
     if (!cache?.data?.length){
       pokemonList.innerHTML = `<div style="color:#6b7280;padding:12px">目前連線異常，請稍後再試。</div>`;
     }
   } finally {
-    hide(); clearTimeout(forceTimer);
+    clearTimeout(showTimer);
+    hide();
   }
 })();
