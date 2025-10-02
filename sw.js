@@ -1,5 +1,5 @@
 /* PWA Service Worker */
-const VERSION = 'v1-20251002';
+const VERSION = 'v1-20251004';
 const STATIC_CACHE = 'static-' + VERSION;
 const DATA_CACHE   = 'data-' + VERSION;
 
