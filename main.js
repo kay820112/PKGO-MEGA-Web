@@ -117,6 +117,7 @@ async function loadTypesAndMerge(){
 // ——— 卡片 HTML（新增右方備註欄，自動儲存） ———
 function detailHTML(p){
   const savedNote = localStorage.getItem("note_" + p.name) || "";
+  const savedRank = localStorage.getItem("rank_" + p.name) || "";
 
   return `
     <span class="close-x" role="button" aria-label="關閉" title="關閉">×</span>
@@ -130,6 +131,15 @@ function detailHTML(p){
         <p>開圖能量：${p.open !== "" ? p.open : "－"}</p>
         <p>練滿能量：${p.total !== "" ? p.total : "－"}</p>
         <p>推薦程度：${p.priority && p.priority !== "" ? p.priority : "－"}</p>
+
+        <select id="rank_${p.name}"
+          style="margin-top:4px; padding:4px; border-radius:6px; border:1px solid #ccc;"
+          onchange="localStorage.setItem('rank_${p.name}', this.value); updateListRank('${p.name}', this.value)">
+          <option value="" ${savedRank==="" ? "selected" : ""}>－</option>
+          <option value="基礎級" ${savedRank==="基礎級" ? "selected" : ""}>基礎級</option>
+          <option value="高階級" ${savedRank==="高階級" ? "selected" : ""}>高階級</option>
+          <option value="頂尖級" ${savedRank==="頂尖級" ? "selected" : ""}>頂尖級</option>
+        </select>
       </div>
 
       <!-- 右側備註區 -->
@@ -190,6 +200,14 @@ function bindCloseX(container){
   };
 }
 
+function updateListRank(name, rank){
+  const el = document.querySelector(`#pokemonList .pokemon-item[data-name="${name}"] .rank-label`);
+  if (el){
+    el.textContent = rank ? `(${rank})` : "";
+  }
+}
+
+
 function renderList(withAnimation=false){
   const filtered = data.filter(p =>
     (!selectedType || p.types.includes(selectedType)) &&
@@ -205,7 +223,13 @@ function renderList(withAnimation=false){
     const div = document.createElement("div");
     div.className = "pokemon-item" + (selectedPokemon === p.name ? " active" : "");
     if (withAnimation){ div.classList.add("fade-up"); div.style.animationDelay = `${idx*0.05}s`; }
-    div.innerHTML = `<h4>${p.name}</h4>` + p.types.map(t => `<span class="type-badge ${t}">${t}</span>`).join("");
+    const savedRank = localStorage.getItem("rank_" + p.name) || "";
+const rankLabel = savedRank ? `<span class="rank-label" style="font-size:12px;color:#555;margin-left:4px;">(${savedRank})</span>` : `<span class="rank-label"></span>`;
+div.innerHTML = `
+  <h4>${p.name} ${rankLabel}</h4>
+  ${p.types.map(t => `<span class="type-badge ${t}">${t}</span>`).join("")}
+`; 
+div.dataset.name = p.name;
     // 滑鼠與鍵盤都可操作
     div.setAttribute("tabindex","0");
     const selectThis = () => { selectedPokemon = p.name; renderDetail(); renderList(false); syncURL(); };
