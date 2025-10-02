@@ -2,110 +2,25 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
   <title>Pokemon GO 超級進化查詢</title>
 
-  <!-- 分享卡片 -->
-  <meta property="og:title" content="Pokemon GO 超級進化查詢">
-  <meta property="og:description" content="快速查詢所有超進化/原始回歸的屬性與所需能量！">
-  <meta property="og:image" content="https://kay820112.github.io/PKGO-MEGA-Web/pikachu_running.gif">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://kay820112.github.io/PKGO-MEGA-Web/">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Pokemon GO 超級進化查詢">
-  <meta name="twitter:description" content="快速查詢所有超進化/原始回歸的屬性與所需能量！">
-  <meta name="twitter:image" content="https://kay820112.github.io/PKGO-MEGA-Web/pikachu_running.gif">
-  <link rel="icon" type="image/gif" href="pikachu_running.gif">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="超進化查詢">
 
-  <style>
-    body { font-family: sans-serif; background: linear-gradient(to bottom right,#eff6ff,#f5f3ff); margin:0; padding:10px; }
-    .container { max-width:1000px; margin:auto; padding:10px; }
-    .card { background:#fff; border-radius:1rem; box-shadow:0 2px 8px rgba(0,0,0,.1); padding:16px; margin-bottom:16px; }
-    .title { text-align:center; font-size:24px; font-weight:700; color:#1f2937; }
-    .subtitle { text-align:center; color:#6b7280; font-size:14px; }
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-180.png?v=20251005">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=20251005">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=20251005">
 
-    /* Loading */
-    #loadingOverlay { position:fixed; inset:0; background:rgba(255,255,255,.9); display:flex; justify-content:center; align-items:center; z-index:9999; }
-    .running-pikachu { width:100px; height:auto; animation:run 2s linear infinite; }
-    @keyframes run { 0%{transform:translateX(-120px) scaleX(1)}49%{transform:translateX(120px) scaleX(1)}50%{transform:translateX(120px) scaleX(-1)}100%{transform:translateX(-120px) scaleX(-1)} }
+  <link rel="preconnect" href="https://docs.google.com" crossorigin>
+  <link rel="dns-prefetch" href="https://docs.google.com">
 
-    /* Badge */
-    .type-badge{display:inline-block;padding:2px 8px;border-radius:9999px;font-size:12px;font-weight:700;color:#fff;margin-right:4px;margin-top:4px;transition:transform .2s,box-shadow .2s;}
-    .type-badge:hover{box-shadow:0 0 6px currentColor; transform:scale(1.05);}
-
-    .一般{background:#9ca3af}.火{background:#ef4444}.水{background:#3b82f6}.草{background:#22c55e}
-    .電{background:#facc15;color:#000}.冰{background:#67e8f9;color:#000}.格鬥{background:#b91c1c}.毒{background:#a855f7}
-    .地面{background:#ca8a04}.飛行{background:#818cf8}.超能力{background:#ec4899}.蟲{background:#84cc16}
-    .岩石{background:#a16207}.幽靈{background:#6b21a8}.龍{background:#4338ca}.惡{background:#374151}
-    .鋼{background:#6b7280}.妖精{background:#f9a8d4}
-
-    /* 列表卡片 */
-    .pokemon-item{border:2px solid #e5e7eb;border-radius:8px;padding:10px;cursor:pointer;transition:transform .3s,box-shadow .3s,border-color .3s;}
-    .pokemon-item:hover{border-color:#9ca3af; box-shadow:0 4px 12px rgba(0,0,0,.15); transform:scale(1.03);}
-    .pokemon-item.active{border-color:#3b82f6; background:#eff6ff;}
-    .pokemon-item h4{font-size:18px;font-weight:700;margin:0 0 8px;color:#111827;transition:all .3s;}
-    .pokemon-item:hover h4{background:linear-gradient(270deg,#2563eb,#9333ea,#2563eb);background-size:600% 600%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:gm 6s ease infinite;}
-    .pokemon-item.active h4{background:linear-gradient(90deg,#2563eb,#9333ea);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:none;}
-    @keyframes gm{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-
-    .fade-up{opacity:0;transform:translateY(10px);animation:fade .8s ease forwards;}
-    @keyframes fade{to{opacity:1;transform:translateY(0)}}
-
-    .filter-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
-    .filter-title{font-weight:700;color:#1f2937;font-size:16px;}
-    .clear-btn{background:none;border:none;color:#3b82f6;font-size:14px;cursor:pointer;}
-    .clear-btn:hover{text-decoration:underline;}
-    .filter-body{display:flex;flex-direction:column;gap:12px;}
-    .filter-group select,.filter-group input{width:100%;padding:10px;border:2px solid #d1d5db;border-radius:8px;font-size:14px;box-sizing:border-box;background:#fff;box-shadow:inset 0 1px 3px rgba(0,0,0,.08);transition:border-color .2s,box-shadow .2s,border-radius .3s,transform .2s;}
-    .filter-group select:hover,.filter-group input:hover{border-color:#3b82f6;box-shadow:inset 0 1px 3px rgba(0,0,0,.12);}
-    .filter-group select:focus,.filter-group input:focus{outline:none;border-color:#2563eb;border-radius:12px;transform:scale(1.02);box-shadow:inset 0 1px 3px rgba(0,0,0,.15),0 0 0 2px rgba(37,99,235,.2);}
-    .search-box input{padding-left:32px;height:42px;background:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="%23a1a1aa" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>') no-repeat 8px center;background-size:16px 16px;}
-
-    /* 卡片右上角 X（沿用藍色連結風格） */
-    .close-x{
-      position:absolute;
-      top:8px; right:10px;
-      font-size:18px; font-weight:700;
-      color:#3b82f6; cursor:pointer;
-      user-select:none; line-height:1;
-    }
-    .close-x:hover{ text-decoration: underline; }
-
-    /* 讓兩種卡片都能放絕對定位的 X，並統一段落間距 */
-    #detailCard, #floatingCard { position: relative; }
-    #detailCard h2, #floatingCard h2 { margin:0 0 12px 0; font-size:20px; font-weight:700; }
-    #detailCard .detail-types, #floatingCard .detail-types { margin:0 0 8px 0; }
-    #detailCard p, #floatingCard p { margin:0 0 8px 0; font-size:14px; color:#111; }
-
-    /* 浮動鏡像卡片（由 JS 同步尺寸與位置；用 border-box 對齊） */
-    #floatingCard{
-      position: fixed;
-      top: 10px;                /* 想更貼頂可改 0 */
-      z-index: 2000;
-      display: none;
-      box-shadow: 0 6px 24px rgba(0,0,0,0.18);
-      border-radius: 12px;
-      background: #fff;
-      will-change: left, width;
-      box-sizing: border-box;
-    }
-
-    @media (max-width:640px){
-      body{padding:6px}
-      .container{max-width:100%;padding:8px;overflow-x:hidden}
-      .card{padding:12px}
-      .title{font-size:20px}
-      .subtitle{font-size:12px}
-      .pokemon-item h4{font-size:16px}
-      #pokemonList{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;width:100%}
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css?v=20251005">
 </head>
 <body>
-  <!-- Loading -->
-  <div id="loadingOverlay"><img class="running-pikachu" src="pikachu_running.gif" alt="Loading..."/></div>
-
-  <!-- 浮動鏡像卡片（原位卡片保留，頂端顯示同步內容） -->
+  <div id="loadingOverlay" style="display:none"><img class="running-pikachu" src="pikachu_running.gif?v=20251005" alt="Loading..."/></div>
   <div id="floatingCard" class="card"></div>
 
   <div class="container">
@@ -114,7 +29,6 @@
       <p class="subtitle">選擇屬性或搜尋寶可夢名稱</p>
     </div>
 
-    <!-- 查詢區 -->
     <div class="card">
       <div class="filter-header">
         <span class="filter-title">篩選條件</span>
@@ -128,275 +42,26 @@
           <select id="pokemonSelect"><option value="">請選擇寶可夢</option></select>
         </div>
         <div class="filter-group search-box">
-          <input id="searchInput" placeholder="搜尋寶可夢名稱..." />
+          <input id="searchInput" placeholder="搜尋寶可夢名稱..." inputmode="search" autocomplete="off" autocapitalize="off" spellcheck="false" />
         </div>
       </div>
     </div>
 
-    <!-- 詳細資訊（原位卡片） -->
     <div id="detailCard" class="card" style="display:none;"></div>
 
-    <!-- 清單 -->
     <div class="card">
       <h3 id="listTitle">所有超級進化 / 原始回歸</h3>
       <div id="pokemonList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;"></div>
     </div>
   </div>
 
+  <script src="main.js?v=20251005"></script>
   <script>
-    // === Google Sheet 兩個工作表 ===
-    const SHEET_BASE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSrBQ6lQHjl-iuSWbQJjlgJXovQRFHqQ0ML4L4VoPVjIQYXygc3VxlINrGs8nY3NqDh_z-bE38M4I-Z/pub";
-    const urlTypes  = `${SHEET_BASE}?gid=0&single=true&output=csv`;           // 超級淨化（名稱+屬性✔）
-    const urlEnergy = `${SHEET_BASE}?gid=557191716&single=true&output=csv`;   // 所需能量表（開圖、總量）
-
-    // === 狀態 ===
-    let data = [];           // [{ name, types:[…], open, total }]
-    let energyMap = {};      // { normalizedName: { open, total, rawName } }
-    let selectedType = "", selectedPokemon = "", searchTerm = "";
-
-    // === DOM ===
-    const typeSelect = document.getElementById("typeSelect");
-    const pokemonSelect = document.getElementById("pokemonSelect");
-    const searchInput = document.getElementById("searchInput");
-    const detailCard = document.getElementById("detailCard");
-    const floatingCard = document.getElementById("floatingCard");
-    const pokemonList = document.getElementById("pokemonList");
-    const listTitle = document.getElementById("listTitle");
-    const loadingOverlay = document.getElementById("loadingOverlay");
-    const clearBtn = document.getElementById("clearBtn");
-
-    // CSV
-    function parseCSV(text){ return text.replace(/\r/g,"").split("\n").map(r => r.split(",")); }
-
-    // 名稱正規化
-    function normalizeName(name){
-      if (!name) return "";
-      let n = name.trim();
-      n = n.replace(/[\uFF01-\uFF5E]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0)); // 全形→半形
-      n = n.replace(/\s+/g, ""); // 去空白
-      if (n === "超級噴火龍Ｘ") n = "超級噴火龍X";
-      if (n === "超級噴火龍Ｙ") n = "超級噴火龍Y";
-      return n;
-    }
-
-    // 讀能量表（處理左右兩張表塊：名稱在0欄，開圖+1，總量+5）
-    async function loadEnergy(){
-      const res = await fetch(urlEnergy);
-      const rows = parseCSV(await res.text());
-      for (let i = 1; i < rows.length; i++){
-        const row = rows[i];
-        for (let j = 0; j < row.length; j++){
-          const raw = row[j] && row[j].trim();
-          if (!raw) continue;
-          if (/^(超|原始)/.test(raw)){
-            const name = normalizeName(raw);
-            const open = row[j+1]?.trim();
-            const total = row[j+5]?.trim();
-            if ((open && !isNaN(open)) || (total && !isNaN(total))){
-              energyMap[name] = {
-                open:  open  && !isNaN(open)  ? Number(open)  : "",
-                total: total && !isNaN(total) ? Number(total) : "",
-                rawName: raw
-              };
-            }
-            j += 5;
-          }
-        }
-      }
-    }
-
-    // 讀屬性✔表 + 合併能量；補齊能量表有而屬性表沒有的項目
-    async function loadTypesAndMerge(){
-      const res = await fetch(urlTypes);
-      const rows = parseCSV(await res.text());
-
-      // 只取 B~S 欄的屬性（避免把「開放日期」抓進來）
-      const headers = rows[0].slice(1, 20);
-
-      const byName = new Set();
-      data = rows.slice(1).map(r => {
-        const rawName = (r[0] || "").trim();
-        const name = normalizeName(rawName);
-        const types = headers.filter((_, i) => r[i+1] && r[i+1].trim() === "✔");
-        const e = energyMap[name] || { open:"", total:"" };
-        byName.add(name);
-        return { name: rawName || name, types, open: e.open, total: e.total };
-      });
-
-      // 下拉選單
-      headers.forEach(t => {
-        const opt = document.createElement("option");
-        opt.value = t; opt.textContent = t; typeSelect.appendChild(opt);
-      });
-      data.forEach(p => {
-        const opt = document.createElement("option");
-        opt.value = p.name; opt.textContent = p.name; pokemonSelect.appendChild(opt);
-      });
-
-      // 補齊（例如原始蓋歐卡/固拉多）
-      Object.keys(energyMap).forEach(norm => {
-        if (!byName.has(norm)){
-          const e = energyMap[norm];
-          const displayName = e.rawName || norm;
-          data.push({ name: displayName, types: [], open: e.open, total: e.total });
-          const opt = document.createElement("option");
-          opt.value = displayName; opt.textContent = displayName; pokemonSelect.appendChild(opt);
-        }
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js?v=20251005').catch(console.error);
       });
     }
-
-    // ——— 卡片 HTML（抽掉 inline style，靠 CSS 控制間距） ———
-    function detailHTML(p){
-      return `
-        <span class="close-x" role="button" aria-label="關閉" title="關閉">×</span>
-        <h2>${p.name}</h2>
-        <div class="detail-types">
-          ${p.types.map(t => `<span class="type-badge ${t}">${t}</span>`).join("") || '<span style="color:#6b7280">（此項目未標註屬性）</span>'}
-        </div>
-        <p>開圖能量：${p.open !== "" ? p.open : "－"}</p>
-        <p>練滿能量：${p.total !== "" ? p.total : "－"}</p>
-      `;
-    }
-
-    function renderDetail(){
-      if (!selectedPokemon){ 
-        detailCard.style.display = "none";
-        floatingCard.style.display = "none";
-        return; 
-      }
-      const p = data.find(x => x.name === selectedPokemon);
-      const html = detailHTML(p);
-
-      // 原位卡片
-      detailCard.style.display = "block";
-      detailCard.innerHTML = html;
-
-      // 浮動鏡像卡片（內容同步；尺寸與位置由 syncFloatingRect 控制）
-      floatingCard.innerHTML = html;
-
-      // 綁定兩個卡片內的 X 關閉
-      bindCloseX(detailCard);
-      bindCloseX(floatingCard);
-
-      // 初次顯示就對齊一次並判斷是否浮起
-      syncFloatingRect();
-      onScroll();
-    }
-
-    // 綁定卡片內 X 事件
-    function bindCloseX(container){
-      const x = container.querySelector(".close-x");
-      if (!x) return;
-      x.onclick = (e) => {
-        e.stopPropagation();
-        selectedPokemon = "";
-        detailCard.style.display = "none";
-        floatingCard.style.display = "none";
-        // 同步 UI
-        pokemonSelect.value = "";
-      };
-    }
-
-    function renderList(withAnimation=false){
-      const filtered = data.filter(p =>
-        (!selectedType || p.types.includes(selectedType)) &&
-        (!searchTerm || p.name.includes(searchTerm))
-      );
-      listTitle.textContent = selectedType
-        ? `${selectedType}屬性寶可夢 (共 ${filtered.length} 隻)`
-        : `所有超級進化 / 原始回歸 (共 ${filtered.length} 隻)`;
-
-      pokemonList.innerHTML = "";
-      pokemonSelect.innerHTML = `<option value="">請選擇寶可夢</option>`;
-      filtered.forEach((p, idx) => {
-        const div = document.createElement("div");
-        div.className = "pokemon-item" + (selectedPokemon === p.name ? " active" : "");
-        if (withAnimation){ div.classList.add("fade-up"); div.style.animationDelay = `${idx*0.05}s`; }
-        div.innerHTML = `<h4>${p.name}</h4>` + p.types.map(t => `<span class="type-badge ${t}">${t}</span>`).join("");
-        div.onclick = () => { selectedPokemon = p.name; renderDetail(); renderList(false); };
-        pokemonList.appendChild(div);
-
-        const opt = document.createElement("option");
-        opt.value = p.name; opt.textContent = p.name; pokemonSelect.appendChild(opt);
-      });
-    }
-
-    // —— 與原位卡片同寬同位，並加邊界保護，避免超出視窗 —— 
-    function syncFloatingRect(){
-      if (detailCard.style.display === "none") return;
-
-      const rect = detailCard.getBoundingClientRect();
-      const PADDING = 10;                 // 視窗左右保留邊距
-      const vw = window.innerWidth;
-
-      let width = rect.width;             // 使用 border-box 寬
-      width = Math.min(width, vw - 2 * PADDING);
-      width = Math.max(width, 0);
-
-      let left = rect.left;
-      left = Math.max(left, PADDING);
-      left = Math.min(left, vw - width - PADDING);
-
-      floatingCard.style.width = width + "px";
-      floatingCard.style.left  = left + "px";
-    }
-
-    // —— 頂邊觸發：卡片頂邊一到就浮起；rAF 平滑更新 —— 
-    let ticking = false;
-    function onScroll(){
-      if (detailCard.style.display === "none") {
-        if (floatingCard.style.display !== "none") floatingCard.style.display = "none";
-        return;
-      }
-      if (!ticking){
-        window.requestAnimationFrame(() => {
-          const rect = detailCard.getBoundingClientRect();
-          const shouldFloat = rect.top <= 10; // 10px 緩衝
-
-          if (shouldFloat){
-            if (floatingCard.style.display !== "block") {
-              floatingCard.style.display = "block";
-              syncFloatingRect();
-              bindCloseX(floatingCard);
-            } else {
-              syncFloatingRect();
-            }
-          } else {
-            if (floatingCard.style.display !== "none") {
-              floatingCard.style.display = "none";
-            }
-          }
-          ticking = false;
-        });
-        ticking = true;
-      }
-    }
-
-    // 互動
-    typeSelect.onchange = e => { selectedType = e.target.value; selectedPokemon = ""; renderDetail(); renderList(true); };
-    pokemonSelect.onchange = e => { selectedPokemon = e.target.value; renderDetail(); renderList(false); };
-    let debounceTimer;
-    searchInput.oninput = e => { clearTimeout(debounceTimer); debounceTimer = setTimeout(() => { searchTerm = e.target.value; renderList(true); }, 500); };
-    clearBtn.onclick = () => {
-      selectedType = ""; selectedPokemon = ""; searchTerm = "";
-      typeSelect.value = ""; pokemonSelect.value = ""; searchInput.value = "";
-      detailCard.style.display = "none"; floatingCard.style.display = "none";
-      renderList(true);
-    };
-
-    // 事件（平滑、低抖動）
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", () => {
-      if (floatingCard.style.display === "block") syncFloatingRect();
-    });
-
-    // 初始化
-    (async function init(){
-      await loadEnergy();            // 先抓能量
-      await loadTypesAndMerge();     // 再抓屬性，並補齊缺漏
-      renderList();
-      setTimeout(() => loadingOverlay.style.display = "none", 1000);
-    })();
   </script>
 </body>
 </html>
