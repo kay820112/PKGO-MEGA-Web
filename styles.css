@@ -1,4 +1,13 @@
-body { font-family: sans-serif; background: linear-gradient(to bottom right,#eff6ff,#f5f3ff); margin:0; padding:10px; }
+html { touch-action: manipulation; -webkit-tap-highlight-color: rgba(0,0,0,0); }
+body {
+  font-family: sans-serif;
+  background: linear-gradient(to bottom right,#eff6ff,#f5f3ff);
+  margin:0;
+  padding-left: max(10px, env(safe-area-inset-left));
+  padding-right: max(10px, env(safe-area-inset-right));
+  padding-top: max(10px, env(safe-area-inset-top));
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+}
 .container { max-width:1000px; margin:auto; padding:10px; }
 .card { background:#fff; border-radius:1rem; box-shadow:0 2px 8px rgba(0,0,0,.1); padding:16px; margin-bottom:16px; }
 .title { text-align:center; font-size:24px; font-weight:700; color:#1f2937; }
@@ -20,16 +29,22 @@ body { font-family: sans-serif; background: linear-gradient(to bottom right,#eff
 .鋼{background:#6b7280}.妖精{background:#f9a8d4}
 
 /* 列表卡片 */
-.pokemon-item{border:2px solid #e5e7eb;border-radius:8px;padding:10px;cursor:pointer;transition:transform .3s,box-shadow .3s,border-color .3s;}
+.pokemon-item{border:2px solid #e5e7eb;border-radius:8px;padding:12px;cursor:pointer;transition:transform .3s,box-shadow .3s,border-color .3s; min-height:44px;}
 .pokemon-item:hover{border-color:#9ca3af; box-shadow:0 4px 12px rgba(0,0,0,.15); transform:scale(1.03);}
 .pokemon-item.active{border-color:#3b82f6; background:#eff6ff;}
 .pokemon-item h4{font-size:18px;font-weight:700;margin:0 0 8px;color:#111827;transition:all .3s;}
 .pokemon-item:hover h4{background:linear-gradient(270deg,#2563eb,#9333ea,#2563eb);background-size:600% 600%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:gm 6s ease infinite;}
 .pokemon-item.active h4{background:linear-gradient(90deg,#2563eb,#9333ea);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:none;}
 @keyframes gm{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.pokemon-item:focus-visible{outline:3px solid rgba(59,130,246,.6); outline-offset:2px;}
+.clear-btn,.close-x,#typeSelect,#pokemonSelect,#searchInput{min-height:44px;}
+input,select{font-size:16px;} /* 防 iOS 自動放大輸入框 */
 
 .fade-up{opacity:0;transform:translateY(10px);animation:fade .8s ease forwards;}
 @keyframes fade{to{opacity:1;transform:translateY(0)}}
+
+/* 列表先保留高度，降低 CLS */
+#pokemonList{ min-height: 50dvh; }
 
 .filter-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
 .filter-title{font-weight:700;color:#1f2937;font-size:16px;}
@@ -48,6 +63,7 @@ body { font-family: sans-serif; background: linear-gradient(to bottom right,#eff
   font-size:18px; font-weight:700;
   color:#3b82f6; cursor:pointer;
   user-select:none; line-height:1;
+  background:none; border:none;
 }
 .close-x:hover{ text-decoration: underline; }
 
@@ -60,7 +76,7 @@ body { font-family: sans-serif; background: linear-gradient(to bottom right,#eff
 /* 浮動鏡像卡片（由 JS 同步尺寸與位置；用 border-box 對齊） */
 #floatingCard{
   position: fixed;
-  top: 10px;                /* 想更貼頂可改 0 */
+  top: 10px;
   z-index: 2000;
   display: none;
   box-shadow: 0 6px 24px rgba(0,0,0,0.18);
@@ -68,6 +84,7 @@ body { font-family: sans-serif; background: linear-gradient(to bottom right,#eff
   background: #fff;
   will-change: left, width;
   box-sizing: border-box;
+  transform: translateZ(0);
 }
 
 @media (max-width:640px){
@@ -78,4 +95,9 @@ body { font-family: sans-serif; background: linear-gradient(to bottom right,#eff
   .subtitle{font-size:12px}
   .pokemon-item h4{font-size:16px}
   #pokemonList{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;width:100%}
+}
+
+/* 使用者偏好減少動態時，關閉動畫/轉場 */
+@media (prefers-reduced-motion: reduce){
+  *{ animation: none !important; transition: none !important; }
 }

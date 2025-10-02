@@ -9,15 +9,28 @@ let energyMap = {};      // { normalizedName: { open, total, rawName } }
 let selectedType = "", selectedPokemon = "", searchTerm = "";
 
 // === DOM ===
-const typeSelect = document.getElementById("typeSelect");
+const typeSelect    = document.getElementById("typeSelect");
 const pokemonSelect = document.getElementById("pokemonSelect");
-const searchInput = document.getElementById("searchInput");
-const detailCard = document.getElementById("detailCard");
-const floatingCard = document.getElementById("floatingCard");
-const pokemonList = document.getElementById("pokemonList");
-const listTitle = document.getElementById("listTitle");
-const loadingOverlay = document.getElementById("loadingOverlay");
-const clearBtn = document.getElementById("clearBtn");
+const searchInput   = document.getElementById("searchInput");
+const detailCard    = document.getElementById("detailCard");
+const floatingCard  = document.getElementById("floatingCard");
+const pokemonList   = document.getElementById("pokemonList");
+const listTitle     = document.getElementById("listTitle");
+const loadingOverlay= document.getElementById("loadingOverlay");
+const clearBtn      = document.getElementById("clearBtn");
+listTitle.setAttribute("aria-live","polite"); // 動態更新讓讀屏朗讀
+
+// —— 本機快取（離線/弱網也能開） ——
+const LS_KEY = "mega_data_cache_v1";
+function saveCache(d){ try{ localStorage.setItem(LS_KEY, JSON.stringify({d, t:Date.now()})); }catch(_){} }
+function loadCache(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return null;
+    const {d,t} = JSON.parse(raw);
+    return { data:d, ageMs: Date.now()-t };
+  }catch(_){ return null; }
+}
 
 // CSV
 function parseCSV(text){ return text.replace(/\r/g,"").split("\n").map(r => r.split(",")); }
@@ -102,7 +115,7 @@ async function loadTypesAndMerge(){
 // ——— 卡片 HTML（抽掉 inline style，靠 CSS 控制間距） ———
 function detailHTML(p){
   return `
-    <span class="close-x" role="button" aria-label="關閉" title="關閉">×</span>
+    <button class="close-x" aria-label="關閉詳細卡片" title="關閉" type="button">×</button>
     <h2>${p.name}</h2>
     <div class="detail-types">
       ${p.types.map(t => `<span class="type-badge ${t}">${t}</span>`).join("") || '<span style="color:#6b7280">（此項目未標註屬性）</span>'}
@@ -148,6 +161,7 @@ function bindCloseX(container){
     floatingCard.style.display = "none";
     // 同步 UI
     pokemonSelect.value = "";
+    syncURL();
   };
 }
 
@@ -167,7 +181,11 @@ function renderList(withAnimation=false){
     div.className = "pokemon-item" + (selectedPokemon === p.name ? " active" : "");
     if (withAnimation){ div.classList.add("fade-up"); div.style.animationDelay = `${idx*0.05}s`; }
     div.innerHTML = `<h4>${p.name}</h4>` + p.types.map(t => `<span class="type-badge ${t}">${t}</span>`).join("");
-    div.onclick = () => { selectedPokemon = p.name; renderDetail(); renderList(false); };
+    // 滑鼠與鍵盤都可操作
+    div.setAttribute("tabindex","0");
+    const selectThis = () => { selectedPokemon = p.name; renderDetail(); renderList(false); syncURL(); };
+    div.onclick = selectThis;
+    div.onkeydown = (e) => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); selectThis(); } };
     pokemonList.appendChild(div);
 
     const opt = document.createElement("option");
@@ -226,16 +244,28 @@ function onScroll(){
   }
 }
 
+// —— URL 同步：可分享目前狀態 —— 
+function syncURL(){
+  const u = new URL(location);
+  selectedType    ? u.searchParams.set("type", selectedType) : u.searchParams.delete("type");
+  selectedPokemon ? u.searchParams.set("name", selectedPokemon) : u.searchParams.delete("name");
+  searchTerm      ? u.searchParams.set("q", searchTerm) : u.searchParams.delete("q");
+  history.replaceState(null,"",u);
+}
+
 // 互動
-typeSelect.onchange = e => { selectedType = e.target.value; selectedPokemon = ""; renderDetail(); renderList(true); };
-pokemonSelect.onchange = e => { selectedPokemon = e.target.value; renderDetail(); renderList(false); };
+typeSelect.onchange = e => { selectedType = e.target.value; selectedPokemon = ""; renderDetail(); renderList(true); syncURL(); };
+pokemonSelect.onchange = e => { selectedPokemon = e.target.value; renderDetail(); renderList(false); syncURL(); };
 let debounceTimer;
-searchInput.oninput = e => { clearTimeout(debounceTimer); debounceTimer = setTimeout(() => { searchTerm = e.target.value; renderList(true); }, 500); };
+searchInput.oninput = e => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => { searchTerm = e.target.value; renderList(true); syncURL(); }, 300);
+};
 clearBtn.onclick = () => {
   selectedType = ""; selectedPokemon = ""; searchTerm = "";
   typeSelect.value = ""; pokemonSelect.value = ""; searchInput.value = "";
   detailCard.style.display = "none"; floatingCard.style.display = "none";
-  renderList(true);
+  renderList(true); syncURL();
 };
 
 // 事件（平滑、低抖動）
@@ -244,10 +274,41 @@ window.addEventListener("resize", () => {
   if (floatingCard.style.display === "block") syncFloatingRect();
 });
 
-// 初始化
+// —— 讀取 URL 參數預設狀態（可從分享連結打開） ——
+(() => {
+  const params = new URLSearchParams(location.search);
+  selectedType    = params.get("type") || "";
+  selectedPokemon = params.get("name") || "";
+  searchTerm      = params.get("q") || "";
+})();
+
+// 初始化（雙保險關閉 Loading；支援快取離線）
 (async function init(){
-  await loadEnergy();            // 先抓能量
-  await loadTypesAndMerge();     // 再抓屬性，並補齊缺漏
-  renderList();
-  setTimeout(() => loadingOverlay.style.display = "none", 1000);
+  const hide = () => { if (loadingOverlay) loadingOverlay.style.display = "none"; };
+  const forceTimer = setTimeout(hide, 1200); // 保底 1.2s 關
+
+  // 1) 有快取先畫，讓行動裝置立即可互動
+  const cache = loadCache();
+  if (cache?.data?.length){
+    data = cache.data;
+    renderList();
+  }
+
+  try {
+    // 2) 背景抓最新資料
+    await loadEnergy();
+    await loadTypesAndMerge();
+    renderList();
+    // 3) 存快取
+    saveCache(data);
+    // 4) 若 URL 指定了 name，補繪詳細
+    if (selectedPokemon){ renderDetail(); }
+  } catch (err) {
+    console.error("[init] 資料讀取失敗：", err);
+    if (!cache?.data?.length){
+      pokemonList.innerHTML = `<div style="color:#6b7280;padding:12px">目前連線異常，請稍後再試。</div>`;
+    }
+  } finally {
+    hide(); clearTimeout(forceTimer);
+  }
 })();
