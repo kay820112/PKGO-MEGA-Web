@@ -1,0 +1,81 @@
+body { font-family: sans-serif; background: linear-gradient(to bottom right,#eff6ff,#f5f3ff); margin:0; padding:10px; }
+.container { max-width:1000px; margin:auto; padding:10px; }
+.card { background:#fff; border-radius:1rem; box-shadow:0 2px 8px rgba(0,0,0,.1); padding:16px; margin-bottom:16px; }
+.title { text-align:center; font-size:24px; font-weight:700; color:#1f2937; }
+.subtitle { text-align:center; color:#6b7280; font-size:14px; }
+
+/* Loading */
+#loadingOverlay { position:fixed; inset:0; background:rgba(255,255,255,.9); display:flex; justify-content:center; align-items:center; z-index:9999; }
+.running-pikachu { width:100px; height:auto; animation:run 2s linear infinite; }
+@keyframes run { 0%{transform:translateX(-120px) scaleX(1)}49%{transform:translateX(120px) scaleX(1)}50%{transform:translateX(120px) scaleX(-1)}100%{transform:translateX(-120px) scaleX(-1)} }
+
+/* Badge */
+.type-badge{display:inline-block;padding:2px 8px;border-radius:9999px;font-size:12px;font-weight:700;color:#fff;margin-right:4px;margin-top:4px;transition:transform .2s,box-shadow .2s;}
+.type-badge:hover{box-shadow:0 0 6px currentColor; transform:scale(1.05);}
+
+.一般{background:#9ca3af}.火{background:#ef4444}.水{background:#3b82f6}.草{background:#22c55e}
+.電{background:#facc15;color:#000}.冰{background:#67e8f9;color:#000}.格鬥{background:#b91c1c}.毒{background:#a855f7}
+.地面{background:#ca8a04}.飛行{background:#818cf8}.超能力{background:#ec4899}.蟲{background:#84cc16}
+.岩石{background:#a16207}.幽靈{background:#6b21a8}.龍{background:#4338ca}.惡{background:#374151}
+.鋼{background:#6b7280}.妖精{background:#f9a8d4}
+
+/* 列表卡片 */
+.pokemon-item{border:2px solid #e5e7eb;border-radius:8px;padding:10px;cursor:pointer;transition:transform .3s,box-shadow .3s,border-color .3s;}
+.pokemon-item:hover{border-color:#9ca3af; box-shadow:0 4px 12px rgba(0,0,0,.15); transform:scale(1.03);}
+.pokemon-item.active{border-color:#3b82f6; background:#eff6ff;}
+.pokemon-item h4{font-size:18px;font-weight:700;margin:0 0 8px;color:#111827;transition:all .3s;}
+.pokemon-item:hover h4{background:linear-gradient(270deg,#2563eb,#9333ea,#2563eb);background-size:600% 600%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:gm 6s ease infinite;}
+.pokemon-item.active h4{background:linear-gradient(90deg,#2563eb,#9333ea);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:none;}
+@keyframes gm{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+.fade-up{opacity:0;transform:translateY(10px);animation:fade .8s ease forwards;}
+@keyframes fade{to{opacity:1;transform:translateY(0)}}
+
+.filter-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.filter-title{font-weight:700;color:#1f2937;font-size:16px;}
+.clear-btn{background:none;border:none;color:#3b82f6;font-size:14px;cursor:pointer;}
+.clear-btn:hover{text-decoration:underline;}
+.filter-body{display:flex;flex-direction:column;gap:12px;}
+.filter-group select,.filter-group input{width:100%;padding:10px;border:2px solid #d1d5db;border-radius:8px;font-size:14px;box-sizing:border-box;background:#fff;box-shadow:inset 0 1px 3px rgba(0,0,0,.08);transition:border-color .2s,box-shadow .2s,border-radius .3s,transform .2s;}
+.filter-group select:hover,.filter-group input:hover{border-color:#3b82f6;box-shadow:inset 0 1px 3px rgba(0,0,0,.12);}
+.filter-group select:focus,.filter-group input:focus{outline:none;border-color:#2563eb;border-radius:12px;transform:scale(1.02);box-shadow:inset 0 1px 3px rgba(0,0,0,.15),0 0 0 2px rgba(37,99,235,.2);}
+.search-box input{padding-left:32px;height:42px;background:url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" stroke=\"%23a1a1aa\" stroke-width=\"2\" viewBox=\"0 0 24 24\"><circle cx=\"11\" cy=\"11\" r=\"7\"/><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"/></svg>') no-repeat 8px center;background-size:16px 16px;}
+
+/* 卡片右上角 X（沿用藍色連結風格） */
+.close-x{
+  position:absolute;
+  top:8px; right:10px;
+  font-size:18px; font-weight:700;
+  color:#3b82f6; cursor:pointer;
+  user-select:none; line-height:1;
+}
+.close-x:hover{ text-decoration: underline; }
+
+/* 讓兩種卡片都能放絕對定位的 X，並統一段落間距 */
+#detailCard, #floatingCard { position: relative; }
+#detailCard h2, #floatingCard h2 { margin:0 0 12px 0; font-size:20px; font-weight:700; }
+#detailCard .detail-types, #floatingCard .detail-types { margin:0 0 8px 0; }
+#detailCard p, #floatingCard p { margin:0 0 8px 0; font-size:14px; color:#111; }
+
+/* 浮動鏡像卡片（由 JS 同步尺寸與位置；用 border-box 對齊） */
+#floatingCard{
+  position: fixed;
+  top: 10px;                /* 想更貼頂可改 0 */
+  z-index: 2000;
+  display: none;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.18);
+  border-radius: 12px;
+  background: #fff;
+  will-change: left, width;
+  box-sizing: border-box;
+}
+
+@media (max-width:640px){
+  body{padding:6px}
+  .container{max-width:100%;padding:8px;overflow-x:hidden}
+  .card{padding:12px}
+  .title{font-size:20px}
+  .subtitle{font-size:12px}
+  .pokemon-item h4{font-size:16px}
+  #pokemonList{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;width:100%}
+}
