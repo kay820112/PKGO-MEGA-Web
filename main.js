@@ -1,3 +1,4 @@
+/* PKGO Web merged build - V1.10 */
 // === Google Sheet 兩個工作表 ===
 const SHEET_BASE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSrBQ6lQHjl-iuSWbQJjlgJXovQRFHqQ0ML4L4VoPVjIQYXygc3VxlINrGs8nY3NqDh_z-bE38M4I-Z/pub";
 const urlTypes  = `${SHEET_BASE}?gid=0&single=true&output=csv`;           // 超級淨化（名稱+屬性✔ + 優先度）
@@ -65,7 +66,7 @@ function normalizeName(name){
 
 // 讀能量表（處理左右兩張表塊：名稱在0欄，開圖+1，總量+5）
 async function loadEnergy(){
-  const res = await fetch(urlEnergy);
+  const res = await fetch(urlEnergy, { cache: 'no-store' }});
   const rows = parseCSV(await res.text());
   for (let i = 1; i < rows.length; i++){
     const row = rows[i];
@@ -91,7 +92,7 @@ async function loadEnergy(){
 
 // 讀屬性✔表 + 合併能量；補齊能量表有而屬性表沒有的項目
 async function loadTypesAndMerge(){
-  const res = await fetch(urlTypes);
+  const res = await fetch(urlTypes, { cache: 'no-store' }});
   const rows = parseCSV(await res.text());
 
   // 只取 B~T 欄作為屬性；V 欄是優先度
@@ -402,3 +403,4 @@ window.addEventListener("resize", () => {
     hide();
   }
 })();
+
