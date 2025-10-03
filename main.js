@@ -138,37 +138,37 @@ function detailHTML(p){
 
   return `
     <span class="close-x" role="button" aria-label="關閉" title="關閉">×</span>
-    <div style="display:flex; gap:20px; align-items:flex-start;">
-      <!-- 左側原有資訊 -->
-      <div style="flex:1; min-width:0;">
-        <h2>${p.name}</h2>
+    <h2 class="pokemon-name">${p.name}</h2>
+
+    <div class="detail-body">
+      <!-- 左邊資訊 -->
+      <div class="stats">
         <div class="detail-types">
           ${p.types.map(t => `<span class="type-badge ${t}">${t}</span>`).join("") || '<span style="color:#6b7280">（此項目未標註屬性）</span>'}
         </div>
         <p>開圖能量：${p.open !== "" ? p.open : "－"}</p>
         <p>練滿能量：${p.total !== "" ? p.total : "－"}</p>
         <p>推薦程度：${p.priority && p.priority !== "" ? p.priority : "－"}</p>
-
-        <select id="rank_${p.name}"
-          style="margin-top:4px; padding:4px; border-radius:6px; border:1px solid #ccc;"
-          onchange="localStorage.setItem('rank_${p.name}', this.value); updateListRank('${p.name}', this.value)">
-          <option value="" ${savedRank==="" ? "selected" : ""}>－</option>
-          <option value="基礎級" ${savedRank==="基礎級" ? "selected" : ""}>基礎級</option>
-          <option value="高階級" ${savedRank==="高階級" ? "selected" : ""}>高階級</option>
-          <option value="頂尖級" ${savedRank==="頂尖級" ? "selected" : ""}>頂尖級</option>
-        </select>
+        <p class="super-rank">
+          超級等級：
+          <select id="rank_${p.name}"
+            onchange="localStorage.setItem('rank_${p.name}', this.value); updateListRank('${p.name}', this.value)">
+            <option value="" ${savedRank==="" ? "selected" : ""}>－</option>
+            <option value="基礎級" ${savedRank==="基礎級" ? "selected" : ""}>基礎級</option>
+            <option value="高階級" ${savedRank==="高階級" ? "selected" : ""}>高階級</option>
+            <option value="頂尖級" ${savedRank==="頂尖級" ? "selected" : ""}>頂尖級</option>
+          </select>
+        </p>
       </div>
 
-      <!-- 右側備註區 -->
-      <div style="flex:1; min-width:0;">
-        <label for="note_${p.name}" style="font-weight:600;display:block;margin-bottom:4px;">備註</label>
-        <textarea id="note_${p.name}" rows="8"
-          style="width:100%;resize:vertical;max-height:200px;padding:8px;border:1px solid #ccc;border-radius:8px;box-sizing:border-box;"
-          oninput="localStorage.setItem('note_${p.name}', this.value)">${savedNote}</textarea>
-      </div>
+      <!-- 右邊備註 -->
+      <textarea id="note_${p.name}" class="remark"
+        oninput="localStorage.setItem('note_${p.name}', this.value)">${savedNote}</textarea>
     </div>
   `;
 }
+
+
 
 // 儲存備註
 function saveNote(name){

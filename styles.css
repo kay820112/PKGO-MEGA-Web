@@ -109,3 +109,31 @@ input,select{font-size:16px;} /* 防 iOS 自動放大輸入框 */
   margin-left: 4px;
 }
 
+.detail-body {
+  display: flex;
+  align-items: stretch; /* 左右兩側等高 */
+  gap: 12px;
+}
+
+.stats {
+  flex: 1;
+}
+
+.remark {
+  width: 40%;           /* 右側佔比 */
+  min-height: 100%;     /* 高度跟 stats 一致 */
+  resize: vertical;
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.super-rank {
+  font-size: 16px;  /* 跟推薦程度一致 */
+  margin: 4px 0;
+}
+.super-rank select {
+  font-size: inherit;
+}
