@@ -101,3 +101,11 @@ input,select{font-size:16px;} /* 防 iOS 自動放大輸入框 */
 @media (prefers-reduced-motion: reduce){
   *{ animation: none !important; transition: none !important; }
 }
+
+/* 讓下方清單顯示的 (基礎級/高階級/頂尖級) 更小更淡 */
+.rank-label {
+  font-size: 12px;
+  color: #777;
+  margin-left: 4px;
+}
+
