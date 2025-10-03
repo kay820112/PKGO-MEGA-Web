@@ -1,16 +1,17 @@
 // Service Worker - V1.10
-const SW_VERSION = 'V1.10';
+const SW_VERSION = 'V1.10.1';
 const STATIC_CACHE = `static-${SW_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${SW_VERSION}`;
 
 // Adjust these paths to your deployment root if needed (e.g., '/PKGO-MEGA-Web/')
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/main.js',
-  '/styles.css',
-  '/pikachu_running.gif',
-  '/manifest.webmanifest'
+  "/",
+  "/index.html",
+  "/main.js",
+  "/styles.css",
+  "/pikachu_running.gif",
+  "/manifest.webmanifest",
+  "/offline.html"
 ];
 
 self.addEventListener('install', (e) => {
