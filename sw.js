@@ -1,79 +1,69 @@
-const VERSION = 'v1.09';
-const STATIC_CACHE = 'static-' + VERSION;
-const DATA_CACHE   = 'data-' + VERSION;
+// Service Worker - V1.11 (auto-refresh on launch)
+const SW_VERSION = 'V1.11';
+const STATIC_CACHE = `static-${SW_VERSION}`;
+const DYNAMIC_CACHE = `dynamic-${SW_VERSION}`;
 
-const CORE_ASSETS = [
-  './index.html',
-  './styles.css?v=20251005',
-  './main.js?v=20251005',
-  './manifest.json',
-  './offline.html',
-  './pikachu_running.gif?v=20251005',
-  './icons/apple-touch-icon-180.png?v=20251005',
-  './icons/icon-192.png?v=20251005',
-  './icons/icon-512.png?v=20251005',
-  './icons/favicon-32.png?v=20251005'
+const STATIC_ASSETS = [
+  '/',
+  '/index.html',
+  '/main.js',
+  '/styles.css',
+  '/pikachu_running.gif',
+  '/manifest.webmanifest',
+  '/offline.html'
 ];
 
 self.addEventListener('install', (e) => {
+  e.waitUntil(caches.open(STATIC_CACHE).then(cache => cache.addAll(STATIC_ASSETS)));
   self.skipWaiting();
-  e.waitUntil(caches.open(STATIC_CACHE).then(cache => cache.addAll(CORE_ASSETS)));
 });
 
 self.addEventListener('activate', (e) => {
   e.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.map(k => { if (!k.endsWith(VERSION)) return caches.delete(k); }));
+    await Promise.all(keys.filter(k => ![STATIC_CACHE, DYNAMIC_CACHE].includes(k)).map(k => caches.delete(k)));
     await self.clients.claim();
+    const clientList = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' });
+    for (const client of clientList) {
+      client.postMessage({ type: 'SW_ACTIVATED', version: SW_VERSION });
+    }
   })());
 });
 
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
+});
+
+const isDynamicData = (url) => {
+  return url.includes('docs.google.com/spreadsheets') || url.endsWith('.csv') || url.endsWith('.json');
+};
+
 self.addEventListener('fetch', (e) => {
   const req = e.request;
-  const url = new URL(req.url);
+  if (req.method !== 'GET') return;
 
-  if (req.mode === 'navigate') {
+  if (isDynamicData(req.url)) {
     e.respondWith((async () => {
       try {
-        const fresh = await fetch(req);
-        const cache = await caches.open(STATIC_CACHE);
-        cache.put('./index.html', fresh.clone());
+        const fresh = await fetch(req, { cache: 'no-store', credentials: 'omit', mode: 'cors' });
+        const cache = await caches.open(DYNAMIC_CACHE);
+        cache.put(req, fresh.clone());
         return fresh;
-      } catch (_) {
-        const cache = await caches.open(STATIC_CACHE);
-        const offline = await cache.match('./offline.html');
-        return offline || Response.error();
+      } catch {
+        const cached = await caches.match(req);
+        if (cached) return cached;
+        return caches.match('/index.html');
       }
     })());
     return;
   }
 
-  if (url.origin === location.origin) {
-    e.respondWith((async () => {
-      const cache = await caches.open(STATIC_CACHE);
-      const cached = await cache.match(req);
-      if (cached) return cached;
-      try {
-        const fresh = await fetch(req);
-        if (fresh && fresh.ok) cache.put(req, fresh.clone());
-        return fresh;
-      } catch (err) {
-        return cached || Response.error();
-      }
-    })());
-    return;
-  }
-
-  if (url.hostname.includes('docs.google.com')) {
-    e.respondWith((async () => {
-      const cache = await caches.open(DATA_CACHE);
-      const cached = await cache.match(req);
-      const networkPromise = fetch(req).then(r => {
-        if (r && (r.ok || r.type === 'opaque')) cache.put(req, r.clone());
-        return r;
-      }).catch(_ => null);
-      return cached || networkPromise || Response.error();
-    })());
-    return;
-  }
+  e.respondWith((async () => {
+    const cached = await caches.match(req);
+    const fetchPromise = fetch(req).then(async (res) => {
+      try { const cache = await caches.open(STATIC_CACHE); cache.put(req, res.clone()); } catch(e){}
+      return res;
+    }).catch(() => null);
+    return cached || fetchPromise || fetch(req);
+  })());
 });
