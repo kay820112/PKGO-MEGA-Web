@@ -3,6 +3,23 @@ const SHEET_BASE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSrBQ6lQHjl-
 const urlTypes  = `${SHEET_BASE}?gid=0&single=true&output=csv`;           // 超級淨化（名稱+屬性✔ + 優先度）
 const urlEnergy = `${SHEET_BASE}?gid=557191716&single=true&output=csv`;   // 所需能量表（開圖、總量）
 
+// ==== 新增：等級排序權重（數字越小排越前）====
+const RANK_ORDER = {
+  '頂尖級': 0,
+  '高階級': 1,
+  '基礎級': 2
+};
+
+// （可選）同義字或亂大小寫時，先標準化
+function normRank(str) {
+  if (!str) return '';
+  const s = String(str).trim();
+  if (s.includes('頂')) return '頂尖級';
+  if (s.includes('高')) return '高階級';
+  if (s.includes('基')) return '基礎級';
+  return s;
+}
+
 // === 狀態 ===
 let data = [];           // [{ name, types:[…], open, total, priority }]
 let energyMap = {};      // { normalizedName: { open, total, rawName } }
@@ -205,6 +222,10 @@ function updateListRank(name, rank){
   if (el){
     el.textContent = rank ? `(${rank})` : "";
   }
+  // 等級變更後即時重排清單
+  if (typeof renderList === 'function') {
+    renderList(false);
+  }
 }
 
 
@@ -217,19 +238,36 @@ function renderList(withAnimation=false){
     ? `${selectedType}屬性寶可夢 (共 ${filtered.length} 隻)`
     : `所有超級進化 / 原始回歸 (共 ${filtered.length} 隻)`;
 
+  // === 新增：依「已選等級」排序（同級則依名稱） ===
+  const sorted = filtered.slice().sort((a, b) => {
+    const sa = localStorage.getItem("rank_" + a.name) || "";
+    const sb = localStorage.getItem("rank_" + b.name) || "";
+    const ra = RANK_ORDER[normRank(sa)] ?? 99;
+    const rb = RANK_ORDER[normRank(sb)] ?? 99;
+    if (ra !== rb) return ra - rb;
+    return String(a.name).localeCompare(String(b.name), 'zh-Hant');
+  });
+
   pokemonList.innerHTML = "";
   pokemonSelect.innerHTML = `<option value="">請選擇寶可夢</option>`;
-  filtered.forEach((p, idx) => {
+
+  // === 修改：改用 sorted 來生成卡片 ===
+  sorted.forEach((p, idx) => {
     const div = document.createElement("div");
     div.className = "pokemon-item" + (selectedPokemon === p.name ? " active" : "");
     if (withAnimation){ div.classList.add("fade-up"); div.style.animationDelay = `${idx*0.05}s`; }
+
     const savedRank = localStorage.getItem("rank_" + p.name) || "";
-const rankLabel = savedRank ? `<span class="rank-label" style="font-size:12px;color:#555;margin-left:4px;">(${savedRank})</span>` : `<span class="rank-label"></span>`;
-div.innerHTML = `
-  <h4>${p.name} ${rankLabel}</h4>
-  ${p.types.map(t => `<span class="type-badge ${t}">${t}</span>`).join("")}
-`; 
-div.dataset.name = p.name;
+    const rankLabel = savedRank
+      ? `<span class="rank-label" style="font-size:12px;color:#555;margin-left:4px;">(${savedRank})</span>`
+      : `<span class="rank-label"></span>`;
+
+    div.innerHTML = `
+      <h4>${p.name} ${rankLabel}</h4>
+      ${p.types.map(t => `<span class="type-badge ${t}">${t}</span>`).join("")}
+    `;
+    div.dataset.name = p.name;
+
     // 滑鼠與鍵盤都可操作
     div.setAttribute("tabindex","0");
     const selectThis = () => { selectedPokemon = p.name; renderDetail(); renderList(false); syncURL(); };
@@ -237,6 +275,7 @@ div.dataset.name = p.name;
     div.onkeydown = (e) => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); selectThis(); } };
     pokemonList.appendChild(div);
 
+    // 下拉選單同步
     const opt = document.createElement("option");
     opt.value = p.name; opt.textContent = p.name; pokemonSelect.appendChild(opt);
   });

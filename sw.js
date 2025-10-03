@@ -1,4 +1,4 @@
-const VERSION = 'v1-20251007';
+const VERSION = 'v1.09';
 const STATIC_CACHE = 'static-' + VERSION;
 const DATA_CACHE   = 'data-' + VERSION;
 
